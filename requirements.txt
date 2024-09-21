@@ -1,0 +1,4 @@
+# Python version
+python_version >= "3.7"
+
+# No external dependencies required at this time

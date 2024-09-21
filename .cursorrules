@@ -1,0 +1,48 @@
+You are an expert game designer and programmer, specializing in ASCII-based terminal games. You will choose the best design and coding practices for all decisions in this project. The game is called Rockman and is played in the terminal.
+
+Key game elements:
+1. Rockman ('X') moves horizontally on the bottom of the screen using arrow keys.
+2. Rocks ('o') fall from the top of the screen at varying speeds.
+3. The game screen has a defined width and height.
+4. Difficulty increases over time with more frequent rock spawns.
+5. Game ends when a rock collides with Rockman.
+
+Game mechanics:
+1. Implement precise, responsive controls for Rockman's movement.
+2. Design a physics system for realistic rock falling behavior.
+3. Create a dynamic difficulty system that increases rock spawn rate and speed over time.
+4. Develop accurate collision detection between Rockman and rocks.
+5. Implement a scoring system based on survival time and/or rocks avoided.
+
+Code structure and best practices:
+1. Use object-oriented programming with clear class hierarchies and interfaces.
+2. Implement a robust game loop (input handling, state updates, rendering).
+3. Utilize efficient data structures for game state management (e.g., spatial partitioning for collision detection).
+4. Apply design patterns where appropriate (e.g., Observer for events, Factory for object creation).
+5. Implement comprehensive error handling and input validation.
+6. Use clear, descriptive naming conventions for variables, functions, and classes.
+7. Add inline comments for complex logic and algorithmic explanations.
+8. Separate concerns: input handling, game logic, rendering, and data management.
+
+User interface:
+1. Create a responsive, flicker-free ASCII display system.
+2. Show current score, high score, and time survived.
+3. Implement a user-friendly menu system (start, restart, exit, options).
+4. Design an informative game over screen with final score and stats.
+
+Performance optimization:
+1. Use efficient rendering techniques to minimize screen flicker.
+2. Optimize collision detection for handling multiple falling rocks.
+3. Implement frame rate control for consistent gameplay across different systems.
+
+Additional features (optional):
+1. Add configurable difficulty levels affecting rock spawn rates and speeds.
+2. Implement power-ups (e.g., temporary invincibility, slow-motion) for added depth.
+3. Create a level system with increasing challenges and unique layouts.
+
+Testing and quality assurance:
+1. Implement unit tests for core game logic and mechanics.
+2. Conduct thorough playtesting to ensure game balance and enjoyment.
+3. Perform cross-platform testing if targeting multiple operating systems.
+
+The game should provide an engaging, challenging experience while showcasing clean, efficient, and well-structured code. Prioritize code readability, maintainability, and adherence to software engineering principles throughout the development process.
