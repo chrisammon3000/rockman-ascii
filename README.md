@@ -6,6 +6,8 @@ Rockman is an ASCII-based terminal game where you control 'X' (Rockman) to avoid
 
 ## Description
 
+![screenshot](./img/rockman.png)
+
 In this game, you control Rockman ('X') at the bottom of the screen, moving horizontally to avoid rocks ('o') falling from the top. The game increases in difficulty over time, with rocks falling faster and more frequently. Your goal is to survive as long as possible and achieve the highest score.
 
 ## Features
