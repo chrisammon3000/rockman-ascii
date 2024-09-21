@@ -202,7 +202,11 @@ def main(stdscr):
     while not game_over:
         # Handle input
         key = stdscr.getch()
-        if key == ord('q'):
+        if key == 27:  # ESC key
+            logging.debug("ESC key pressed, exiting game")
+            game_over = True
+            break
+        elif key == ord('q'):
             break
         elif key == ord(' '):  # Spacebar
             paused = not paused
