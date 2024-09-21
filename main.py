@@ -196,108 +196,130 @@ def main(stdscr):
     rocks_per_wave = 1
     start_time = time.time()
     game_over = False
+    paused = False
+    pause_start_time = 0
     logging.debug("Entering main game loop")
     while not game_over:
         # Handle input
         key = stdscr.getch()
         if key == ord('q'):
             break
-        elif key in [curses.KEY_LEFT, curses.KEY_RIGHT, curses.KEY_SLEFT, curses.KEY_SRIGHT]:
-            if key in [curses.KEY_SLEFT, curses.KEY_SRIGHT]:  # Shift + Arrow keys
-                direction = 'left' if key == curses.KEY_SLEFT else 'right'
-                rockman.teleport(1, screen_width - 2, direction)
-                score.apply_teleport_penalty()  # Apply teleport penalty
-                logging.debug(f"Rockman teleported {direction} to x={rockman.x}, Teleport penalty applied")
-                logging.debug(f"Teleport penalty applied, new total score: {score.get_total_score()}")
-                # Check for collision immediately after teleportation
-                if check_collision(rockman, rocks):
-                    rockman.die()
-                    game_over = True
-                    logging.debug("Collision detected after teleportation, game over set to True")
-            elif key == curses.KEY_LEFT and rockman.x > 1:
-                rockman.move(-1)
-            elif key == curses.KEY_RIGHT and rockman.x < screen_width - 2:
-                rockman.move(1)
-            score.combo = 0
+        elif key == ord(' '):  # Spacebar
+            paused = not paused
+            if paused:
+                pause_start_time = time.time()
+                logging.debug("Game paused")
+            else:
+                start_time += time.time() - pause_start_time
+                logging.debug("Game resumed")
+        elif not paused:
+            if key in [curses.KEY_LEFT, curses.KEY_RIGHT, curses.KEY_SLEFT, curses.KEY_SRIGHT]:
+                if key in [curses.KEY_SLEFT, curses.KEY_SRIGHT]:  # Shift + Arrow keys
+                    direction = 'left' if key == curses.KEY_SLEFT else 'right'
+                    rockman.teleport(1, screen_width - 2, direction)
+                    score.apply_teleport_penalty()  # Apply teleport penalty
+                    logging.debug(f"Rockman teleported {direction} to x={rockman.x}, Teleport penalty applied")
+                    logging.debug(f"Teleport penalty applied, new total score: {score.get_total_score()}")
+                    # Check for collision immediately after teleportation
+                    if check_collision(rockman, rocks):
+                        rockman.die()
+                        game_over = True
+                        logging.debug("Collision detected after teleportation, game over set to True")
+                elif key == curses.KEY_LEFT and rockman.x > 1:
+                    rockman.move(-1)
+                elif key == curses.KEY_RIGHT and rockman.x < screen_width - 2:
+                    rockman.move(1)
+                score.combo = 0
 
-        # Update game state
-        frame_count += 1
-        elapsed_time = time.time() - start_time
+        if not paused:
+            # Update game state
+            frame_count += 1
+            elapsed_time = time.time() - start_time
 
-        # Generate new rocks
-        if frame_count % 20 == 0:  # Spawn rocks every 20 frames (about 1 second)
-            for _ in range(rocks_per_wave):
-                x = random.randint(1, screen_width - 2)
-                y = random.randint(-5, 0)  # Start rocks above the screen with random offsets
-                new_rock = Rock(x, y)
-                rocks.append(new_rock)
-            if frame_count % 100 == 0:  # Increase rocks per wave every 5 seconds
-                rocks_per_wave += 1
+            # Generate new rocks
+            if frame_count % 20 == 0:  # Spawn rocks every 20 frames (about 1 second)
+                for _ in range(rocks_per_wave):
+                    x = random.randint(1, screen_width - 2)
+                    y = random.randint(-5, 0)  # Start rocks above the screen with random offsets
+                    new_rock = Rock(x, y)
+                    rocks.append(new_rock)
+                if frame_count % 100 == 0:  # Increase rocks per wave every 5 seconds
+                    rocks_per_wave += 1
 
-        # Update rocks
-        rocks_avoided = 0
-        near_misses = 0
-        if frame_count % 2 == 0:  # Make rocks fall every 2 frames
+            # Update rocks
+            rocks_avoided = 0
+            near_misses = 0
+            if frame_count % 2 == 0:  # Make rocks fall every 2 frames
+                for rock in rocks:
+                    rock.fall()
+                    if rock.y == screen_height - 2 and abs(rock.x - rockman.x) <= 1:
+                        near_misses += 1
+                        score.combo += 1
+
+            # Remove rocks that have fallen off the screen
+            rocks_avoided = len([rock for rock in rocks if rock.y >= screen_height - 1])
+            rocks = [rock for rock in rocks if rock.y < screen_height - 1]
+
+            # Update score
+            score.update(elapsed_time, rocks_avoided, near_misses, rocks_per_wave)
+
+            # Check for collision
+            if check_collision(rockman, rocks):
+                rockman.die()
+                game_over = True
+                logging.debug("Collision detected, game over set to True")
+
+            # Render
+            win.clear()
+            
+            # Draw header
+            draw_header(win, len(rocks), elapsed_time, score)
+            
+            # Draw game area border
+            win.hline(2, 0, curses.ACS_HLINE, screen_width - 1)
+            win.addch(2, 0, curses.ACS_LTEE)
+            win.addch(2, screen_width - 1, curses.ACS_RTEE)
+            win.vline(3, 0, curses.ACS_VLINE, screen_height - 4)
+            win.vline(3, screen_width - 1, curses.ACS_VLINE, screen_height - 4)
+            win.addch(screen_height - 1, 0, curses.ACS_LLCORNER)
+            win.hline(screen_height - 1, 1, curses.ACS_HLINE, screen_width - 2)
+
+            # Safely draw the bottom-right corner
+            try:
+                win.addch(screen_height - 1, screen_width - 1, curses.ACS_LRCORNER)
+            except curses.error:
+                pass
+            
+            # Draw Rockman
+            if rockman.is_alive:
+                win.addstr(rockman.y, rockman.x, rockman.symbol)
+            else:
+                win.addstr(rockman.y, rockman.x, rockman.symbol)
+
+            # Draw rocks
             for rock in rocks:
-                rock.fall()
-                if rock.y == screen_height - 2 and abs(rock.x - rockman.x) <= 1:
-                    near_misses += 1
-                    score.combo += 1
+                if 2 < rock.y < screen_height - 1:
+                    win.addstr(rock.y, rock.x, rock.symbol)
 
-        # Remove rocks that have fallen off the screen
-        rocks_avoided = len([rock for rock in rocks if rock.y >= screen_height - 1])
-        rocks = [rock for rock in rocks if rock.y < screen_height - 1]
+            win.refresh()
 
-        # Update score
-        score.update(elapsed_time, rocks_avoided, near_misses, rocks_per_wave)
+            # If game over, pause briefly to show the death animation
+            if game_over:
+                logging.debug("Game over, showing death animation")
+                time.sleep(0.5)
 
-        # Check for collision
-        if check_collision(rockman, rocks):
-            rockman.die()
-            game_over = True
-            logging.debug("Collision detected, game over set to True")
-
-        # Render
-        win.clear()
-        
-        # Draw header
-        draw_header(win, len(rocks), elapsed_time, score)
-        
-        # Draw game area border
-        win.hline(2, 0, curses.ACS_HLINE, screen_width - 1)
-        win.addch(2, 0, curses.ACS_LTEE)
-        win.addch(2, screen_width - 1, curses.ACS_RTEE)
-        win.vline(3, 0, curses.ACS_VLINE, screen_height - 4)
-        win.vline(3, screen_width - 1, curses.ACS_VLINE, screen_height - 4)
-        win.addch(screen_height - 1, 0, curses.ACS_LLCORNER)
-        win.hline(screen_height - 1, 1, curses.ACS_HLINE, screen_width - 2)
-
-        # Safely draw the bottom-right corner
-        try:
-            win.addch(screen_height - 1, screen_width - 1, curses.ACS_LRCORNER)
-        except curses.error:
-            pass
-        
-        # Draw Rockman
-        if rockman.is_alive:
-            win.addstr(rockman.y, rockman.x, rockman.symbol)
+            # Control frame rate
+            time.sleep(0.02)  # Approx. 50 FPS
         else:
-            win.addstr(rockman.y, rockman.x, rockman.symbol)
-
-        # Draw rocks
-        for rock in rocks:
-            if 2 < rock.y < screen_height - 1:
-                win.addstr(rock.y, rock.x, rock.symbol)
-
-        win.refresh()
-
-        # If game over, pause briefly to show the death animation
-        if game_over:
-            logging.debug("Game over, showing death animation")
-            time.sleep(0.5)
-
-        # Control frame rate
-        time.sleep(0.02)  # Approx. 50 FPS
+            # Display pause message in a box
+            pause_win = curses.newwin(5, screen_width - 4, screen_height // 2 - 2, 2)
+            pause_win.box()
+            pause_text = "PAUSED"
+            resume_text = "Press SPACE to resume"
+            pause_win.addstr(1, (screen_width - 6 - len(pause_text)) // 2, pause_text, curses.A_BOLD)
+            pause_win.addstr(3, (screen_width - 6 - len(resume_text)) // 2, resume_text)
+            pause_win.refresh()
+            win.refresh()  # Refresh the main window to ensure it's still visible
 
     logging.debug("Exited main game loop")
 
