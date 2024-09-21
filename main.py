@@ -110,7 +110,7 @@ def draw_header(win, rocks_count, elapsed_time, score):
     minutes = int(elapsed_time // 60)
     seconds = int(elapsed_time % 60)
     current_score = score.get_total_score()
-    header = f"Rockman | Rocks: {rocks_count} | Time: {minutes:02d}:{seconds:02d} | Score: {current_score}"
+    header = f"Rocks: {rocks_count} | Time: {minutes:02d}:{seconds:02d} | Score: {current_score}"
     
     # Draw the box
     win.addch(0, 0, curses.ACS_ULCORNER)
@@ -130,34 +130,33 @@ def check_collision(rockman, rocks):
             return True
     return False
 
-def show_startup_screen(stdscr):
-    height, width = stdscr.getmaxyx()
+def show_startup_screen(win):
+    height, width = win.getmaxyx()
+    startup_win = curses.newwin(7, width - 4, height // 2 - 3, 2)
+    startup_win.box()
+    
     title = "ROCKMAN"
-    subtitle = "Press any key to start or ESC to exit"
+    subtitle = "Press any key to start"
+    exit_text = "Press ESC to exit"
     
-    # Clear the screen
-    stdscr.clear()
+    startup_win.addstr(1, (width - 6 - len(title)) // 2, title, curses.A_BOLD)
+    startup_win.addstr(3, (width - 6 - len(subtitle)) // 2, subtitle)
+    startup_win.addstr(5, (width - 6 - len(exit_text)) // 2, exit_text)
     
-    # Draw the title
-    stdscr.addstr(height // 2 - 2, (width - len(title)) // 2, title, curses.A_BOLD)
-    
-    # Draw the subtitle
-    stdscr.addstr(height // 2 + 2, (width - len(subtitle)) // 2, subtitle)
-    
-    stdscr.refresh()
+    startup_win.refresh()
+    win.refresh()  # Refresh the main window to ensure it's still visible
     
     # Wait for 2 seconds
     time.sleep(2)
     
     # Wait for user input
-    stdscr.nodelay(False)
-    key = stdscr.getch()
-    stdscr.nodelay(True)
+    curses.curs_set(0)
+    win.nodelay(False)
+    key = win.getch()
+    win.nodelay(True)
 
     # Check if ESC key was pressed
-    if key == 27:  # 27 is the ASCII code for ESC
-        return False
-    return True
+    return key != 27  # 27 is the ASCII code for ESC
 
 def main(stdscr):
     logging.debug("Game started")
@@ -170,11 +169,6 @@ def main(stdscr):
     stdscr.nodelay(1)
     stdscr.timeout(50)  # Reduced timeout for faster updates
     stdscr.scrollok(False)
-
-    # Show startup screen
-    if not show_startup_screen(stdscr):
-        logging.debug("Game exited from startup screen")
-        return  # Exit the game if ESC was pressed
 
     # Get screen dimensions
     screen_height, screen_width = stdscr.getmaxyx()
@@ -190,6 +184,17 @@ def main(stdscr):
     # Create rocks list and score
     rocks = []
     score = Score()
+
+    # Draw initial game screen
+    win.clear()
+    draw_header(win, 0, 0, score)
+    win.box()
+    win.refresh()
+
+    # Show startup screen
+    if not show_startup_screen(win):
+        logging.debug("Game exited from startup screen")
+        return  # Exit the game if ESC was pressed
 
     # Game loop
     frame_count = 0
