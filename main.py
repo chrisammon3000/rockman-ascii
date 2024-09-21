@@ -20,18 +20,21 @@ class Rockman:
         self.x += dx
         self.last_move_time = time.time()
 
-    def teleport(self, min_x, max_x):
-        new_x = self.x
-        while new_x == self.x:  # Ensure Rockman actually moves
-            new_x = random.randint(min_x, max_x)
+    def teleport(self, min_x, max_x, direction):
+        if direction == 'left':
+            new_x = random.randint(min_x, self.x - 1)
+        else:  # direction == 'right'
+            new_x = random.randint(self.x + 1, max_x)
         self.x = new_x
         self.last_move_time = time.time()
 
     def die(self):
-        self.is_alive = False
-        self.symbol = '* *'
-        self.x -= 1  # Move left by 1 to center the explosion
-        self.width = 3  # Increase width to 3 for the explosion effect
+        if self.is_alive:
+            self.is_alive = False
+            self.symbol = '* *'
+            self.x -= 1  # Move left by 1 to center the explosion
+            self.width = 3  # Increase width to 3 for the explosion effect
+            logging.debug(f"Rockman died at x={self.x}, y={self.y}")
 
 class Rock:
     def __init__(self, x, y):
@@ -187,8 +190,14 @@ def main(stdscr):
             break
         elif key in [curses.KEY_LEFT, curses.KEY_RIGHT, curses.KEY_SLEFT, curses.KEY_SRIGHT]:
             if key in [curses.KEY_SLEFT, curses.KEY_SRIGHT]:  # Shift + Arrow keys
-                rockman.teleport(1, screen_width - 2)
-                logging.debug(f"Rockman teleported to x={rockman.x}")
+                direction = 'left' if key == curses.KEY_SLEFT else 'right'
+                rockman.teleport(1, screen_width - 2, direction)
+                logging.debug(f"Rockman teleported {direction} to x={rockman.x}")
+                # Check for collision immediately after teleportation
+                if check_collision(rockman, rocks):
+                    rockman.die()
+                    game_over = True
+                    logging.debug("Collision detected after teleportation, game over set to True")
             elif key == curses.KEY_LEFT and rockman.x > 1:
                 rockman.move(-1)
             elif key == curses.KEY_RIGHT and rockman.x < screen_width - 2:
