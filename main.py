@@ -20,6 +20,13 @@ class Rockman:
         self.x += dx
         self.last_move_time = time.time()
 
+    def teleport(self, min_x, max_x):
+        new_x = self.x
+        while new_x == self.x:  # Ensure Rockman actually moves
+            new_x = random.randint(min_x, max_x)
+        self.x = new_x
+        self.last_move_time = time.time()
+
     def die(self):
         self.is_alive = False
         self.symbol = '* *'
@@ -178,11 +185,14 @@ def main(stdscr):
         key = stdscr.getch()
         if key == ord('q'):
             break
-        elif key == curses.KEY_LEFT and rockman.x > 1:
-            rockman.move(-1)
-            score.combo = 0
-        elif key == curses.KEY_RIGHT and rockman.x < screen_width - 2:
-            rockman.move(1)
+        elif key in [curses.KEY_LEFT, curses.KEY_RIGHT, curses.KEY_SLEFT, curses.KEY_SRIGHT]:
+            if key in [curses.KEY_SLEFT, curses.KEY_SRIGHT]:  # Shift + Arrow keys
+                rockman.teleport(1, screen_width - 2)
+                logging.debug(f"Rockman teleported to x={rockman.x}")
+            elif key == curses.KEY_LEFT and rockman.x > 1:
+                rockman.move(-1)
+            elif key == curses.KEY_RIGHT and rockman.x < screen_width - 2:
+                rockman.move(1)
             score.combo = 0
 
         # Update game state
