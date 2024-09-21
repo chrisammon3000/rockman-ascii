@@ -1,12 +1,10 @@
-# Rockman
+# rockman-ascii
 
-[![Python Version](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/downloads/) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT) [![Version](https://img.shields.io/badge/version-1.0.0-orange.svg)](https://github.com/yourusername/rockman/releases) [![Status](https://img.shields.io/badge/status-active-brightgreen.svg)](https://github.com/yourusername/rockman)
+[![Python Version](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/downloads/) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT) [![Version](https://img.shields.io/badge/version-1.0.0-orange.svg)](https://github.com/chrisammon3000/rockman-ascii/releases) [![Status](https://img.shields.io/badge/status-active-brightgreen.svg)](https://github.com/chrisammon3000/rockman-ascii)
 
 Rockman is an ASCII-based terminal game where you control 'X' (Rockman) to avoid falling rocks.
 
 ## Description
-
-![Rockman Screenshot](./img/rockman.png)
 
 In this game, you control Rockman ('X') at the bottom of the screen, moving horizontally to avoid rocks ('o') falling from the top. The game increases in difficulty over time, with rocks falling faster and more frequently. Your goal is to survive as long as possible and achieve the highest score.
 
@@ -25,8 +23,8 @@ In this game, you control Rockman ('X') at the bottom of the screen, moving hori
 1. Ensure you have Python 3.7 or higher installed.
 2. Clone this repository:
    ```
-   git clone https://github.com/yourusername/rockman.git
-   cd rockman
+   git clone https://github.com/chrisammon3000/rockman-ascii.git
+   cd rockman-ascii
    ```
 3. Create and activate a virtual environment:
    ```
