@@ -1,8 +1,12 @@
 # Rockman
 
+[![Python Version](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/downloads/) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT) [![Version](https://img.shields.io/badge/version-1.0.0-orange.svg)](https://github.com/yourusername/rockman/releases) [![Status](https://img.shields.io/badge/status-active-brightgreen.svg)](https://github.com/yourusername/rockman)
+
 Rockman is an ASCII-based terminal game where you control 'X' (Rockman) to avoid falling rocks.
 
 ## Description
+
+![Rockman Screenshot](./img/rockman.png)
 
 In this game, you control Rockman ('X') at the bottom of the screen, moving horizontally to avoid rocks ('o') falling from the top. The game increases in difficulty over time, with rocks falling faster and more frequently. Your goal is to survive as long as possible and achieve the highest score.
 
@@ -58,12 +62,14 @@ In this game, you control Rockman ('X') at the bottom of the screen, moving hori
 - Shift + Right Arrow: Teleport Rockman to the right
 - Spacebar: Pause/Unpause the game
 - 'q' or ESC: Quit the game
+- 'm': Secret pause (freezes the screen without any indication)
 
 ## Scoring System
 
 The game features a comprehensive scoring system. For detailed information about how scores are calculated, please refer to the [SCORING.md](SCORING.md) file.
 
 ## Development
+Rockman was developed entirely with AI generated code using [Cursor](https://www.cursor.com/). No python was written by any human.
 
 This project is structured with a main game loop in `main.py`. The current implementation includes:
 

@@ -327,6 +327,7 @@ def main(stdscr):
     start_time = time.time()
     game_over = False
     paused = False
+    secret_paused = False  # New variable for secret pause
     pause_start_time = 0
     logging.debug("Entering main game loop")
 
@@ -348,7 +349,13 @@ def main(stdscr):
             else:
                 start_time += time.time() - pause_start_time
                 logging.debug("Game resumed")
-        elif not paused:
+        elif key == ord('m'):  # Secret pause button
+            secret_paused = not secret_paused
+            if secret_paused:
+                logging.debug("Game secretly paused")
+            else:
+                logging.debug("Game secretly resumed")
+        elif not paused and not secret_paused:
             if key in [curses.KEY_LEFT, curses.KEY_RIGHT, curses.KEY_SLEFT, curses.KEY_SRIGHT]:
                 if key in [curses.KEY_SLEFT, curses.KEY_SRIGHT]:  # Shift + Arrow keys for teleportation
                     direction = 'left' if key == curses.KEY_SLEFT else 'right'
@@ -367,7 +374,7 @@ def main(stdscr):
                     rockman.move(1)
                 score.combo = 0
 
-        if not paused:
+        if not paused and not secret_paused:
             # Update game state
             frame_count += 1
             elapsed_time = time.time() - start_time
