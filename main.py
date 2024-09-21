@@ -1,14 +1,36 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import curses
 import time
 import random
 import logging
 
-# Set up logging
+# Set up logging for debugging
 logging.basicConfig(filename='rockman_debug.log', level=logging.DEBUG, 
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Rockman:
+    """
+    Represents the player character in the Rockman game.
+    
+    Attributes:
+        x (int): The x-coordinate of Rockman.
+        y (int): The y-coordinate of Rockman.
+        symbol (str): The character used to represent Rockman on the screen.
+        width (int): The width of Rockman's representation.
+        last_move_time (float): The timestamp of Rockman's last movement.
+        is_alive (bool): Indicates whether Rockman is alive or not.
+    """
+
     def __init__(self, x, y):
+        """
+        Initialize a new Rockman instance.
+
+        Args:
+            x (int): The initial x-coordinate.
+            y (int): The initial y-coordinate.
+        """
         self.x = x
         self.y = y
         self.symbol = 'X'
@@ -17,10 +39,24 @@ class Rockman:
         self.is_alive = True
 
     def move(self, dx):
+        """
+        Move Rockman horizontally.
+
+        Args:
+            dx (int): The distance to move (-1 for left, 1 for right).
+        """
         self.x += dx
         self.last_move_time = time.time()
 
     def teleport(self, min_x, max_x, direction):
+        """
+        Teleport Rockman to a random position in the specified direction.
+
+        Args:
+            min_x (int): The minimum x-coordinate for teleportation.
+            max_x (int): The maximum x-coordinate for teleportation.
+            direction (str): The direction to teleport ('left' or 'right').
+        """
         if direction == 'left':
             new_x = random.randint(min_x, self.x - 1)
         else:  # direction == 'right'
@@ -29,6 +65,9 @@ class Rockman:
         self.last_move_time = time.time()
 
     def die(self):
+        """
+        Change Rockman's appearance when he dies.
+        """
         if self.is_alive:
             self.is_alive = False
             self.symbol = '* *'
@@ -37,16 +76,46 @@ class Rockman:
             logging.debug(f"Rockman died at x={self.x}, y={self.y}")
 
 class Rock:
+    """
+    Represents a falling rock in the Rockman game.
+
+    Attributes:
+        x (int): The x-coordinate of the rock.
+        y (int): The y-coordinate of the rock.
+        symbol (str): The character used to represent the rock on the screen.
+    """
+
     def __init__(self, x, y):
+        """
+        Initialize a new Rock instance.
+
+        Args:
+            x (int): The initial x-coordinate.
+            y (int): The initial y-coordinate.
+        """
         self.x = x
         self.y = y
         self.symbol = 'o'
 
     def fall(self):
+        """
+        Move the rock down by one unit.
+        """
         self.y += 1
 
 class Score:
+    """
+    Manages the scoring system for the Rockman game.
+
+    Attributes:
+        Various score components and game statistics.
+    """
+
     def __init__(self):
+        """
+        Initialize a new Score instance with default values.
+        """
+        # Initialize various score components
         self.base_score = 0
         self.time_score = 0
         self.rock_avoidance_score = 0
@@ -59,23 +128,33 @@ class Score:
         self.last_difficulty_increase = 0
         self.last_decay_time = 0
         self.teleport_penalty = 50  # Penalty for each teleport
-        self.teleport_penalty_total = 0  # New attribute to track total teleport penalties
+        self.teleport_penalty_total = 0  # Track total teleport penalties
 
     def update(self, elapsed_time, rocks_avoided, near_misses, rocks_per_wave):
+        """
+        Update the score based on game events.
+
+        Args:
+            elapsed_time (float): The total game time elapsed.
+            rocks_avoided (int): The number of rocks avoided in this update.
+            near_misses (int): The number of near misses in this update.
+            rocks_per_wave (int): The current number of rocks per wave.
+        """
+        # Update score based on game events
         self.time_score = int(elapsed_time)
         self.rock_avoidance_score += rocks_avoided * 5 * self.combo
         self.near_miss_score += near_misses * 2
         
-        # Update difficulty multiplier
+        # Increase difficulty over time
         if elapsed_time - self.last_difficulty_increase >= 30:
             self.difficulty_multiplier += 0.1
             self.last_difficulty_increase = elapsed_time
         
-        # Level-up bonus
+        # Award level-up bonus
         if rocks_per_wave > self.level_up_bonus // 100:
             self.level_up_bonus += 100
         
-        # Survival milestone bonuses
+        # Award survival milestone bonuses
         if elapsed_time >= 300 and self.survival_milestone_bonus < 2000:
             self.survival_milestone_bonus = 2000
         elif elapsed_time >= 120 and self.survival_milestone_bonus < 1000:
@@ -83,17 +162,26 @@ class Score:
         elif elapsed_time >= 60 and self.survival_milestone_bonus < 500:
             self.survival_milestone_bonus = 500
         
-        # Score decay
+        # Apply score decay for long-running games
         if elapsed_time >= 300 and elapsed_time - self.last_decay_time >= 10:
             self.score_decay += 1
             self.last_decay_time = elapsed_time
 
     def apply_teleport_penalty(self):
+        """
+        Apply a penalty for teleporting.
+        """
         penalty = int(self.teleport_penalty * self.difficulty_multiplier)
         self.teleport_penalty_total += penalty
         logging.debug(f"Teleport penalty applied: Penalty: {penalty}, Total penalty: {self.teleport_penalty_total}")
 
     def get_total_score(self):
+        """
+        Calculate and return the total score.
+
+        Returns:
+            int: The total score.
+        """
         total = max(0, int((self.base_score + self.time_score + self.rock_avoidance_score + 
                     self.near_miss_score + self.level_up_bonus + 
                     self.survival_milestone_bonus - self.score_decay - self.teleport_penalty_total) * 
@@ -106,24 +194,45 @@ class Score:
         return total
 
 def draw_header(win, rocks_count, elapsed_time, score):
+    """
+    Draw the game information header.
+
+    Args:
+        win (curses.window): The curses window to draw on.
+        rocks_count (int): The current number of rocks on screen.
+        elapsed_time (float): The total game time elapsed.
+        score (Score): The current game score.
+    """
+    # Draw the game information header
     height, width = win.getmaxyx()
     minutes = int(elapsed_time // 60)
     seconds = int(elapsed_time % 60)
     current_score = score.get_total_score()
     header = f"Rocks: {rocks_count} | Time: {minutes:02d}:{seconds:02d} | Score: {current_score}"
     
-    # Draw the box
+    # Draw the box around the header
     win.addch(0, 0, curses.ACS_ULCORNER)
     win.addch(0, width - 1, curses.ACS_URCORNER)
     win.hline(0, 1, curses.ACS_HLINE, width - 2)
     win.vline(1, 0, curses.ACS_VLINE, 1)
     win.vline(1, width - 1, curses.ACS_VLINE, 1)
     
-    # Draw the text
+    # Draw the header text
     start_x = (width - len(header)) // 2
     win.addstr(1, start_x, header)
 
 def check_collision(rockman, rocks):
+    """
+    Check if Rockman collides with any rocks.
+
+    Args:
+        rockman (Rockman): The Rockman instance.
+        rocks (list): List of Rock instances.
+
+    Returns:
+        bool: True if a collision is detected, False otherwise.
+    """
+    # Check if Rockman collides with any rocks
     for rock in rocks:
         if rock.x == rockman.x and rock.y == rockman.y:
             logging.debug(f"Collision detected at x={rock.x}, y={rock.y}")
@@ -131,6 +240,16 @@ def check_collision(rockman, rocks):
     return False
 
 def show_startup_screen(win):
+    """
+    Display the startup screen.
+
+    Args:
+        win (curses.window): The curses window to draw on.
+
+    Returns:
+        bool: True if the game should start, False if it should exit.
+    """
+    # Display the startup screen
     height, width = win.getmaxyx()
     startup_win = curses.newwin(7, width - 4, height // 2 - 3, 2)
     startup_win.box()
@@ -159,9 +278,15 @@ def show_startup_screen(win):
     return key != 27  # 27 is the ASCII code for ESC
 
 def main(stdscr):
+    """
+    The main game loop and initialization.
+
+    Args:
+        stdscr (curses.window): The main curses window.
+    """
     logging.debug("Game started")
     
-    # Setup
+    # Setup curses environment
     curses.curs_set(0)
     curses.noecho()
     curses.cbreak()
@@ -181,7 +306,7 @@ def main(stdscr):
     rockman = Rockman(screen_width // 2, screen_height - 2)
     logging.debug(f"Rockman created at x={rockman.x}, y={rockman.y}")
 
-    # Create rocks list and score
+    # Initialize game objects
     rocks = []
     score = Score()
 
@@ -196,7 +321,7 @@ def main(stdscr):
         logging.debug("Game exited from startup screen")
         return  # Exit the game if ESC was pressed
 
-    # Game loop
+    # Game loop variables
     frame_count = 0
     rocks_per_wave = 1
     start_time = time.time()
@@ -204,6 +329,8 @@ def main(stdscr):
     paused = False
     pause_start_time = 0
     logging.debug("Entering main game loop")
+
+    # Main game loop
     while not game_over:
         # Handle input
         key = stdscr.getch()
@@ -223,7 +350,7 @@ def main(stdscr):
                 logging.debug("Game resumed")
         elif not paused:
             if key in [curses.KEY_LEFT, curses.KEY_RIGHT, curses.KEY_SLEFT, curses.KEY_SRIGHT]:
-                if key in [curses.KEY_SLEFT, curses.KEY_SRIGHT]:  # Shift + Arrow keys
+                if key in [curses.KEY_SLEFT, curses.KEY_SRIGHT]:  # Shift + Arrow keys for teleportation
                     direction = 'left' if key == curses.KEY_SLEFT else 'right'
                     rockman.teleport(1, screen_width - 2, direction)
                     score.apply_teleport_penalty()  # Apply teleport penalty
@@ -278,7 +405,7 @@ def main(stdscr):
                 game_over = True
                 logging.debug("Collision detected, game over set to True")
 
-            # Render
+            # Render game state
             win.clear()
             
             # Draw header
@@ -366,7 +493,7 @@ def main(stdscr):
         # Add a delay to ensure the game over screen is visible
         time.sleep(2)
 
-    # Cleanup
+    # Cleanup curses settings
     curses.nocbreak()
     stdscr.keypad(False)
     curses.echo()
