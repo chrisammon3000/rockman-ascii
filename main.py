@@ -7,11 +7,19 @@ class Rockman:
         self.x = x
         self.y = y
         self.symbol = 'X'
+        self.width = 1
         self.last_move_time = time.time()
+        self.is_alive = True
 
     def move(self, dx):
         self.x += dx
         self.last_move_time = time.time()
+
+    def die(self):
+        self.is_alive = False
+        self.symbol = '* *'
+        self.x -= 1  # Move left by 1 to center the explosion
+        self.width = 3  # Increase width to 3 for the explosion effect
 
 class Rock:
     def __init__(self, x, y):
@@ -92,6 +100,35 @@ def check_collision(rockman, rocks):
             return True
     return False
 
+def show_startup_screen(stdscr):
+    height, width = stdscr.getmaxyx()
+    title = "ROCKMAN"
+    subtitle = "Press any key to start or ESC to exit"
+    
+    # Clear the screen
+    stdscr.clear()
+    
+    # Draw the title
+    stdscr.addstr(height // 2 - 2, (width - len(title)) // 2, title, curses.A_BOLD)
+    
+    # Draw the subtitle
+    stdscr.addstr(height // 2 + 2, (width - len(subtitle)) // 2, subtitle)
+    
+    stdscr.refresh()
+    
+    # Wait for 2 seconds
+    time.sleep(2)
+    
+    # Wait for user input
+    stdscr.nodelay(False)
+    key = stdscr.getch()
+    stdscr.nodelay(True)
+
+    # Check if ESC key was pressed
+    if key == 27:  # 27 is the ASCII code for ESC
+        return False
+    return True
+
 def main(stdscr):
     # Setup
     curses.curs_set(0)
@@ -101,6 +138,10 @@ def main(stdscr):
     stdscr.nodelay(1)
     stdscr.timeout(50)  # Reduced timeout for faster updates
     stdscr.scrollok(False)
+
+    # Show startup screen
+    if not show_startup_screen(stdscr):
+        return  # Exit the game if ESC was pressed
 
     # Get screen dimensions
     screen_height, screen_width = stdscr.getmaxyx()
@@ -165,6 +206,7 @@ def main(stdscr):
 
         # Check for collision
         if check_collision(rockman, rocks):
+            rockman.die()
             game_over = True
 
         # Render
@@ -189,7 +231,10 @@ def main(stdscr):
             pass
         
         # Draw Rockman
-        win.addstr(rockman.y, rockman.x, rockman.symbol)
+        if rockman.is_alive:
+            win.addstr(rockman.y, rockman.x, rockman.symbol)
+        else:
+            win.addstr(rockman.y, rockman.x, rockman.symbol)
 
         # Draw rocks
         for rock in rocks:
@@ -198,26 +243,34 @@ def main(stdscr):
 
         win.refresh()
 
+        # If game over, pause briefly to show the death animation
+        if game_over:
+            time.sleep(0.5)
+
         # Control frame rate
         time.sleep(0.02)  # Approx. 50 FPS
 
     # Game over screen
     if game_over:
-        win.clear()
+        # Create a new window for the game over text
+        game_over_win = curses.newwin(5, screen_width - 4, screen_height // 2 - 2, 2)
+        game_over_win.box()
+
         game_over_text = "GAME OVER"
-        win.addstr(screen_height // 2 - 2, (screen_width - len(game_over_text)) // 2, game_over_text)
+        game_over_win.addstr(1, (screen_width - 6 - len(game_over_text)) // 2, game_over_text, curses.A_BOLD)
         
         final_score_text = f"Final Score: {score.get_total_score()}"
-        win.addstr(screen_height // 2, (screen_width - len(final_score_text)) // 2, final_score_text)
+        game_over_win.addstr(2, (screen_width - 6 - len(final_score_text)) // 2, final_score_text)
         
         press_key_text = "Press any key to exit"
-        win.addstr(screen_height // 2 + 2, (screen_width - len(press_key_text)) // 2, press_key_text)
+        game_over_win.addstr(3, (screen_width - 6 - len(press_key_text)) // 2, press_key_text)
         
-        win.refresh()
+        game_over_win.refresh()
+        win.refresh()  # Refresh the main window to ensure it's still visible
         
         # Wait for user input
-        win.nodelay(False)  # Make getch() blocking
-        win.getch()  # Wait for any key press
+        stdscr.nodelay(False)  # Make getch() blocking
+        stdscr.getch()  # Wait for any key press
 
     # Cleanup
     curses.nocbreak()
