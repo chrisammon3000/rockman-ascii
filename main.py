@@ -1,6 +1,11 @@
 import curses
 import time
 import random
+import logging
+
+# Set up logging
+logging.basicConfig(filename='rockman_debug.log', level=logging.DEBUG, 
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Rockman:
     def __init__(self, x, y):
@@ -97,6 +102,7 @@ def draw_header(win, rocks_count, elapsed_time, score):
 def check_collision(rockman, rocks):
     for rock in rocks:
         if rock.x == rockman.x and rock.y == rockman.y:
+            logging.debug(f"Collision detected at x={rock.x}, y={rock.y}")
             return True
     return False
 
@@ -130,6 +136,8 @@ def show_startup_screen(stdscr):
     return True
 
 def main(stdscr):
+    logging.debug("Game started")
+    
     # Setup
     curses.curs_set(0)
     curses.noecho()
@@ -141,16 +149,19 @@ def main(stdscr):
 
     # Show startup screen
     if not show_startup_screen(stdscr):
+        logging.debug("Game exited from startup screen")
         return  # Exit the game if ESC was pressed
 
     # Get screen dimensions
     screen_height, screen_width = stdscr.getmaxyx()
+    logging.debug(f"Screen dimensions: {screen_width}x{screen_height}")
 
     # Create a new window
     win = curses.newwin(screen_height, screen_width, 0, 0)
 
     # Create Rockman
     rockman = Rockman(screen_width // 2, screen_height - 2)
+    logging.debug(f"Rockman created at x={rockman.x}, y={rockman.y}")
 
     # Create rocks list and score
     rocks = []
@@ -161,6 +172,7 @@ def main(stdscr):
     rocks_per_wave = 1
     start_time = time.time()
     game_over = False
+    logging.debug("Entering main game loop")
     while not game_over:
         # Handle input
         key = stdscr.getch()
@@ -208,6 +220,7 @@ def main(stdscr):
         if check_collision(rockman, rocks):
             rockman.die()
             game_over = True
+            logging.debug("Collision detected, game over set to True")
 
         # Render
         win.clear()
@@ -245,38 +258,54 @@ def main(stdscr):
 
         # If game over, pause briefly to show the death animation
         if game_over:
+            logging.debug("Game over, showing death animation")
             time.sleep(0.5)
 
         # Control frame rate
         time.sleep(0.02)  # Approx. 50 FPS
 
+    logging.debug("Exited main game loop")
+
     # Game over screen
     if game_over:
-        # Create a new window for the game over text
-        game_over_win = curses.newwin(5, screen_width - 4, screen_height // 2 - 2, 2)
-        game_over_win.box()
+        logging.debug("Entering game over screen")
+        try:
+            # Create a new window for the game over text
+            game_over_win = curses.newwin(5, screen_width - 4, screen_height // 2 - 2, 2)
+            logging.debug(f"Game over window created: height=5, width={screen_width-4}, y={screen_height//2-2}, x=2")
+            game_over_win.box()
 
-        game_over_text = "GAME OVER"
-        game_over_win.addstr(1, (screen_width - 6 - len(game_over_text)) // 2, game_over_text, curses.A_BOLD)
-        
-        final_score_text = f"Final Score: {score.get_total_score()}"
-        game_over_win.addstr(2, (screen_width - 6 - len(final_score_text)) // 2, final_score_text)
-        
-        press_key_text = "Press any key to exit"
-        game_over_win.addstr(3, (screen_width - 6 - len(press_key_text)) // 2, press_key_text)
-        
-        game_over_win.refresh()
-        win.refresh()  # Refresh the main window to ensure it's still visible
-        
-        # Wait for user input
-        stdscr.nodelay(False)  # Make getch() blocking
-        stdscr.getch()  # Wait for any key press
+            game_over_text = "GAME OVER"
+            game_over_win.addstr(1, (screen_width - 6 - len(game_over_text)) // 2, game_over_text, curses.A_BOLD)
+            
+            final_score_text = f"Final Score: {score.get_total_score()}"
+            game_over_win.addstr(2, (screen_width - 6 - len(final_score_text)) // 2, final_score_text)
+            
+            press_key_text = "Press any key to exit"
+            game_over_win.addstr(3, (screen_width - 6 - len(press_key_text)) // 2, press_key_text)
+            
+            game_over_win.refresh()
+            win.refresh()  # Refresh the main window to ensure it's still visible
+            logging.debug("Game over screen rendered")
+            
+            # Wait for user input
+            stdscr.nodelay(False)  # Make getch() blocking
+            key = stdscr.getch()  # Wait for any key press
+            logging.debug(f"Key pressed to exit game over screen: {key}")
+        except Exception as e:
+            logging.error(f"Error displaying game over screen: {str(e)}")
+        finally:
+            logging.debug("Game over screen displayed")
+
+        # Add a delay to ensure the game over screen is visible
+        time.sleep(2)
 
     # Cleanup
     curses.nocbreak()
     stdscr.keypad(False)
     curses.echo()
     curses.endwin()
+    logging.debug("Game ended")
 
 if __name__ == "__main__":
     curses.wrapper(main)
