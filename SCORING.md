@@ -35,6 +35,9 @@ This document outlines the scoring algorithm for the Rockman game.
 9. **Score Decay**:
    - Subtract 1 point every 10 seconds after the 5-minute mark.
 
+10. **Teleport Penalty**:
+    - Subtract 50 points (multiplied by the current difficulty multiplier) each time Rockman teleports.
+
 ## Final Score Calculation
 
 The final score is calculated as follows:
@@ -52,6 +55,7 @@ This scoring system encourages both survival and skillful play:
 - The difficulty multiplier ensures that points earned later in the game are worth more.
 - Survival milestones give players short-term goals to aim for.
 - The score decay prevents excessively high scores in very long games.
+- The teleport penalty discourages overuse of the teleport ability, adding a risk-reward element to this powerful move.
 
 Players can choose between playing it safe for consistent point gain or taking risks for higher scores.
 

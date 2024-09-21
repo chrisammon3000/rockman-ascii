@@ -58,6 +58,8 @@ class Score:
         self.combo = 0
         self.last_difficulty_increase = 0
         self.last_decay_time = 0
+        self.teleport_penalty = 50  # Penalty for each teleport
+        self.teleport_penalty_total = 0  # New attribute to track total teleport penalties
 
     def update(self, elapsed_time, rocks_avoided, near_misses, rocks_per_wave):
         self.time_score = int(elapsed_time)
@@ -86,17 +88,29 @@ class Score:
             self.score_decay += 1
             self.last_decay_time = elapsed_time
 
+    def apply_teleport_penalty(self):
+        penalty = int(self.teleport_penalty * self.difficulty_multiplier)
+        self.teleport_penalty_total += penalty
+        logging.debug(f"Teleport penalty applied: Penalty: {penalty}, Total penalty: {self.teleport_penalty_total}")
+
     def get_total_score(self):
-        return int((self.base_score + self.time_score + self.rock_avoidance_score + 
+        total = max(0, int((self.base_score + self.time_score + self.rock_avoidance_score + 
                     self.near_miss_score + self.level_up_bonus + 
-                    self.survival_milestone_bonus - self.score_decay) * 
-                   self.difficulty_multiplier)
+                    self.survival_milestone_bonus - self.score_decay - self.teleport_penalty_total) * 
+                   self.difficulty_multiplier))
+        logging.debug(f"Score components: Base: {self.base_score}, Time: {self.time_score}, " 
+                      f"Rock Avoidance: {self.rock_avoidance_score}, Near Miss: {self.near_miss_score}, "
+                      f"Level-up Bonus: {self.level_up_bonus}, Survival Bonus: {self.survival_milestone_bonus}, "
+                      f"Decay: {self.score_decay}, Teleport Penalty: {self.teleport_penalty_total}, "
+                      f"Multiplier: {self.difficulty_multiplier}, Total: {total}")
+        return total
 
 def draw_header(win, rocks_count, elapsed_time, score):
     height, width = win.getmaxyx()
     minutes = int(elapsed_time // 60)
     seconds = int(elapsed_time % 60)
-    header = f"Rockman | Rocks: {rocks_count} | Time: {minutes:02d}:{seconds:02d} | Score: {score.get_total_score()}"
+    current_score = score.get_total_score()
+    header = f"Rockman | Rocks: {rocks_count} | Time: {minutes:02d}:{seconds:02d} | Score: {current_score}"
     
     # Draw the box
     win.addch(0, 0, curses.ACS_ULCORNER)
@@ -192,7 +206,9 @@ def main(stdscr):
             if key in [curses.KEY_SLEFT, curses.KEY_SRIGHT]:  # Shift + Arrow keys
                 direction = 'left' if key == curses.KEY_SLEFT else 'right'
                 rockman.teleport(1, screen_width - 2, direction)
-                logging.debug(f"Rockman teleported {direction} to x={rockman.x}")
+                score.apply_teleport_penalty()  # Apply teleport penalty
+                logging.debug(f"Rockman teleported {direction} to x={rockman.x}, Teleport penalty applied")
+                logging.debug(f"Teleport penalty applied, new total score: {score.get_total_score()}")
                 # Check for collision immediately after teleportation
                 if check_collision(rockman, rocks):
                     rockman.die()
