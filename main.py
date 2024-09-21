@@ -20,9 +20,9 @@ class Rock:
     def fall(self):
         self.y += 1
 
-def draw_header(win, rocks_count, minutes, seconds, milliseconds):
+def draw_header(win, rocks_count, elapsed_seconds, elapsed_milliseconds):
     height, width = win.getmaxyx()
-    header = f"Rockman | Rocks: {rocks_count} | Time: {minutes:02d}:{seconds:02d}:{milliseconds:02d}"
+    header = f"Rockman | Rocks: {rocks_count} | Time: {elapsed_seconds:02d}:{elapsed_milliseconds:02d}"
     
     # Draw the box
     win.addch(0, 0, curses.ACS_ULCORNER)
@@ -34,6 +34,12 @@ def draw_header(win, rocks_count, minutes, seconds, milliseconds):
     # Draw the text
     start_x = (width - len(header)) // 2
     win.addstr(1, start_x, header)
+
+def check_collision(rockman, rocks):
+    for rock in rocks:
+        if rock.x == rockman.x and rock.y == rockman.y:
+            return True
+    return False
 
 def main(stdscr):
     # Setup
@@ -61,7 +67,8 @@ def main(stdscr):
     frame_count = 0
     rocks_per_wave = 1
     start_time = time.time()
-    while True:
+    game_over = False
+    while not game_over:
         # Handle input
         key = stdscr.getch()
         if key == ord('q'):
@@ -92,17 +99,20 @@ def main(stdscr):
         # Remove rocks that have fallen off the screen
         rocks = [rock for rock in rocks if rock.y < screen_height - 1]
 
+        # Check for collision
+        if check_collision(rockman, rocks):
+            game_over = True
+
         # Calculate elapsed time
         elapsed_time = time.time() - start_time
-        minutes = int(elapsed_time // 60)
-        seconds = int(elapsed_time % 60)
-        milliseconds = int((elapsed_time % 1) * 100)
+        elapsed_seconds = int(elapsed_time)
+        elapsed_milliseconds = int((elapsed_time - elapsed_seconds) * 100)
 
         # Render
         win.clear()
         
         # Draw header
-        draw_header(win, len(rocks), minutes, seconds, milliseconds)
+        draw_header(win, len(rocks), elapsed_seconds, elapsed_milliseconds)
         
         # Draw game area border
         win.hline(2, 0, curses.ACS_HLINE, screen_width - 1)
@@ -131,6 +141,21 @@ def main(stdscr):
 
         # Control frame rate
         time.sleep(0.02)  # Approx. 50 FPS
+
+    # Game over screen
+    if game_over:
+        win.clear()
+        game_over_text = "GAME OVER"
+        win.addstr(screen_height // 2 - 1, (screen_width - len(game_over_text)) // 2, game_over_text)
+        
+        press_key_text = "Press any key to exit"
+        win.addstr(screen_height // 2 + 1, (screen_width - len(press_key_text)) // 2, press_key_text)
+        
+        win.refresh()
+        
+        # Wait for user input
+        win.nodelay(False)  # Make getch() blocking
+        win.getch()  # Wait for any key press
 
     # Cleanup
     curses.nocbreak()
