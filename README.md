@@ -4,13 +4,17 @@ Rockman is an ASCII-based terminal game where you control 'X' (Rockman) to avoid
 
 ## Description
 
-In this game, you control Rockman ('X') at the bottom of the screen, moving horizontally to avoid rocks ('o') falling from the top. The game increases in difficulty over time, with rocks falling faster and more frequently.
+In this game, you control Rockman ('X') at the bottom of the screen, moving horizontally to avoid rocks ('o') falling from the top. The game increases in difficulty over time, with rocks falling faster and more frequently. Your goal is to survive as long as possible and achieve the highest score.
 
 ## Features
 
 - ASCII graphics for a retro gaming experience
 - Increasing difficulty as the game progresses
 - Simple controls using arrow keys
+- Teleportation ability for quick escapes
+- Comprehensive scoring system with combos and bonuses
+- Pause functionality
+- Game over screen with final score display
 
 ## Installation
 
@@ -41,17 +45,47 @@ In this game, you control Rockman ('X') at the bottom of the screen, moving hori
    python main.py
    ```
 3. Use the left and right arrow keys to move Rockman.
-4. Avoid the falling rocks for as long as possible.
-5. Press 'q' to quit the game.
+4. Use Shift + left/right arrow keys to teleport Rockman.
+5. Avoid the falling rocks for as long as possible.
+6. Press Spacebar to pause/unpause the game.
+7. Press 'q' or ESC to quit the game.
+
+## Controls
+
+- Left Arrow: Move Rockman left
+- Right Arrow: Move Rockman right
+- Shift + Left Arrow: Teleport Rockman to the left
+- Shift + Right Arrow: Teleport Rockman to the right
+- Spacebar: Pause/Unpause the game
+- 'q' or ESC: Quit the game
+
+## Scoring System
+
+The game features a comprehensive scoring system. For detailed information about how scores are calculated, please refer to the [SCORING.md](SCORING.md) file.
 
 ## Development
 
-This project is structured with a main game loop in `main.py`. Future development will include:
+This project is structured with a main game loop in `main.py`. The current implementation includes:
 
-- Implementing Rockman's movement
-- Adding falling rock generation and physics
-- Implementing collision detection
-- Adding scoring and difficulty progression
+- Rockman's movement and teleportation
+- Falling rock generation and physics
+- Collision detection
+- Scoring and difficulty progression
+- Pause functionality
+- Game over screen
+
+For future improvements and feature ideas, please check the [IMPROVEMENTS.md](IMPROVEMENTS.md) file.
+
+## Logging
+
+The game uses Python's logging module to log debug information to a file named `rockman_debug.log`. This can be useful for troubleshooting or understanding the game's behavior.
+
+## Contributing
+
+Contributions to Rockman are welcome! Please feel free to submit a Pull Request.
+
+## Contact
+[@chrisammon3000](https://github.com/chrisammon3000)
 
 ## License
 
